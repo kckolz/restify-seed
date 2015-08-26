@@ -7,10 +7,6 @@ function UserRoutes(api) {
   api.get('/api/user/me', userController.me);
   api.get('/api/user/:userId', userController.getUser);
   api.put('/api/user', userController.updateUser);
-
-  api.get('api/test', function(req, res) {
-    res.send(200, "hi");
-  })
 }
 
 module.exports.routes = UserRoutes;
