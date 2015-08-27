@@ -3,6 +3,11 @@ var CalendarModel = require('../models/calendarModel');
 var CalendarController = {
 
   getCalendarDay: function(req, res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+
     var calModel = new CalendarModel();
 
     calModel.selectCalendarDay()
@@ -17,6 +22,11 @@ var CalendarController = {
   },
 
   postCalendarAppointment: function(req, res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+    
     var calModel = new CalendarModel();
 
     calModel.insertCalendarAppointment(

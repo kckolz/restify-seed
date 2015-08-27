@@ -1,5 +1,5 @@
-var restify = require('restify');
-var config = require('../config');
+'use strict';
+
 var userController = require('../controllers/userController');
 
 function UserRoutes(api) {

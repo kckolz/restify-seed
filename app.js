@@ -1,12 +1,13 @@
+'use strict';
+
 var restify = require('restify');
 var fs = require('fs');
-var oauthserver = require('oauth2-server');
-var oauthModel = require('./models/oauth')
+var restifyOAuth2 = require("restify-oauth2");
 var mongoose = require('mongoose');
 var domain = require('domain');
 var config = require('./config');
 var logger = require('./libraries/logger').getLogger('app');
-var middleware = require('./components/middleware');
+var hooks = require("./oauth/hooks");
 
 var api = restify.createServer({
   name: config.api.name,
@@ -19,9 +20,9 @@ var api = restify.createServer({
 
 api.pre(restify.pre.sanitizePath());
 api.use(restify.acceptParser(api.acceptable));
-api.use(restify.bodyParser());
-api.use(restify.queryParser());
 api.use(restify.authorizationParser());
+api.use(restify.bodyParser({ mapParams: false }));
+api.use(restify.queryParser());
 
 logger.info('enabling CORS');
 api.use(function(req, res, next) {
@@ -56,25 +57,14 @@ api.use(function(req, res, next) {
   next();
 });
 
-// oauth config
-api.oauth = oauthserver({
-  model: oauthModel,
-  grants: ['password', 'refresh_token'],
-  debug: true,
-  accessTokenLifetime: 31536000
-});
+restifyOAuth2.ropc(api, { tokenEndpoint: '/token', hooks: hooks });
 
-api.get('/oauth/token', api.oauth.grant());
-
-api.use(middleware.authorise)
-
-api.use(api.oauth.errorHandler());
 
 //Iterates through all ./routes files to find matching route
 logger.info('loading routes');
 fs.readdirSync('./routes').forEach(function(curFile) {
   if (curFile.substr(-3) === '.js') {
-    route = require('./routes/' + curFile);
+    var route = require('./routes/' + curFile);
     route.routes(api);
   }
 });
@@ -83,5 +73,3 @@ logger.info('attempting to start server');
 api.listen(config.environment.port, function() {
   logger.info('%s is running at %s', config.api.name, api.url);
 });
-
-module.exports = api;

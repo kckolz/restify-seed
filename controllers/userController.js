@@ -1,3 +1,5 @@
+'use strict';
+
 // Load required packages
 var OAuthUsersSchema = require('../models/user');
 var responseUtil = require('../util/responseUtil');
@@ -42,11 +44,21 @@ var UserController = {
   },
 
   me: function(req, res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+
     var authUser = res.locals.user;
     return responseUtil.handleSuccess(res, authUser)
   },
 
   getUser: function(req, res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+
     var userId = req.params.userId;
 
     // Use the User model to find all clients
@@ -59,6 +71,11 @@ var UserController = {
   },
 
   updateUser: function(req,res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+    
     var userId = req.params.userId;
     var authUser = res.locals.user;
     var authUserId = authUser.id;
