@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 var domain = require('domain');
 var config = require('./config');
 var logger = require('./libraries/logger').getLogger('app');
+var middleware = require('./components/middleware');
 
 var api = restify.createServer({
   name: config.api.name,
@@ -46,7 +47,7 @@ api.use(function(req, res, next) {
     errMsg += 'Context: \n' + err;
     errMsg += 'Trace: \n' + err.stack + '\n';
 
-    logger.error(err.message || '');
+    logger.error(errMsg || '');
 
     domain.dispose();
   });
@@ -65,7 +66,9 @@ api.oauth = oauthserver({
 
 api.get('/oauth/token', api.oauth.grant());
 
-// api.use(api.oauth.errorHandler());
+api.use(middleware.authorise)
+
+api.use(api.oauth.errorHandler());
 
 //Iterates through all ./routes files to find matching route
 logger.info('loading routes');
@@ -80,3 +83,5 @@ logger.info('attempting to start server');
 api.listen(config.environment.port, function() {
   logger.info('%s is running at %s', config.api.name, api.url);
 });
+
+module.exports = api;
