@@ -8,24 +8,20 @@ var ClientController = {
 
   createClient: function(req, res) {
 
-    OAuthClientsSchema.find({clientId:req.body.clientId}, function(err, client) {
-      if (err) {
-        return responseUtil.handleInternalError(res, err);
-      }
-
-      if (client.length) {
+    OAuthClientsSchema.find({clientId:req.body.clientId}).exec()
+      .then(function(client) {
         return responseUtil.handleBadRequest(res, 'A client already exists with that id.');
-      }
-
-      // Save the client and check for errors
-      OAuthClientsSchema.register(req.body.clientId, req.body.secret, function(err, client) {
-        if (err) {
-          return responseUtil.handleInternalError(res, err);
-        }
-
-        return responseUtil.handleSuccess(res, client.clientId);
+      }, function(error) {
+        return responseUtil.handleInternalError(res, error);
       });
-    });
+
+    // Save the client and check for errors
+    OAuthClientsSchema.register(req.body.clientId, req.body.secret)
+      .then(function(client) {
+        return responseUtil.handleSuccess(res, client.clientId);
+      }, function(error) {
+        return responseUtil.handleInternalError(res, err);
+      })
   },
 
   getClient: function(req, res) {
@@ -34,17 +30,12 @@ var ClientController = {
       return res.sendUnauthenticated();
     }
 
-    var clientId = req.params.clientId;
-
     // Use the User model to find all clients
-    OAuthClientsSchema.find({'clientId':clientId}, function(err, client) {
-      if (err) {
-        return responseUtil.handleInternalError(res, err);
-      } else {
-        return responseUtil.handleSuccess(res, client);
-      }
-      
-    });
+    OAuthClientsSchema.find({'clientId':req.params.clientId}).exec().then(function(client) {
+      return responseUtil.handleSuccess(res, client);
+    }, function(error) {
+      return responseUtil.handleInternalError(res, err);
+    })
   }
 };
 

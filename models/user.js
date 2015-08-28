@@ -4,6 +4,7 @@ var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Q = require('q');
 
 var OAuthUsersSchema = new Schema({
   email: { type: String, unique: true, required: true },
@@ -27,42 +28,45 @@ OAuthUsersSchema.static('register', function(fields, cb) {
   delete fields.password;
 
   user = new OAuthUsersModel(fields);
-  user.save(cb);
+  return user.save();
 });
 
-OAuthUsersSchema.static('getUser', function(email, password, cb) {
-  OAuthUsersModel.authenticate(email, password, function(err, user) {
-    if (err || !user) return cb(err);
-    cb(null, user.email);
-  });
+OAuthUsersSchema.static('getUser', function(email) {
+  var dfd = Q.defer();
+  this.findOne({ email: email }).then(function(user) {
+    dfd.resolve(user);
+  }, function(error) {
+    dfd.reject(error);
+  })
+  return dfd.promise;
 });
 
-OAuthUsersSchema.static('updateUser', function(currentUser, cb) {
-
+OAuthUsersSchema.static('updateUser', function(currentUser) {
+  var dfd = Q.defer();
   var model = this;
   model.update({_id:currentUser._id},
     {$set: { firstname: currentUser.firstname,
       lastname: currentUser.lastname,
       hashed_password: hashPassword(currentUser.password),
       email: currentUser.email}}, null,
-    function(err){
+    function(err, user){
       if (err) {
-        cb(err);
+        dfd.reject(err);
+      } else {
+        dfd.resolve(user);
       }
-      model.findOne({'_id':currentUser._id}, function(err, user) {
-        if (err) {
-          cb(err);
-        }
-        cb(null, user);
-      });
     });
+  return dfd.promise;
 });
 
 OAuthUsersSchema.static('authenticate', function(email, password, cb) {
-  this.findOne({ email: email }, function(err, user) {
-    if (err || !user) return cb(err);
-    cb(null, bcrypt.compareSync(password, user.hashed_password) ? user : null);
-  });
+  var dfd = Q.defer();
+  this.findOne({ email: email }).then(function(user) {
+    dfd.resolve(bcrypt.compareSync(password, user.hashed_password) ? user : null);
+  }, function(error) {
+    dfd.reject(error);
+  })
+  return dfd.promise;
 });
 
 mongoose.model('users', OAuthUsersSchema);

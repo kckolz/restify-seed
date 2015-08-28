@@ -14,20 +14,19 @@ function hashSecret(secret) {
   return bcrypt.hashSync(secret, salt);
 }
 
-OAuthClientSchema.static('register', function(clientId, secret, cb) {
-  var client;
-
+OAuthClientSchema.static('register', function(clientId, secret) {
   hashedSecret = hashSecret(secret);
-
-  client = new OAuthClientsModel({clientId: clientId, secret: hashedSecret});
-  client.save(cb);
+  var client = new OAuthClientsModel({clientId: clientId, secret: hashedSecret});
+  return client.save();
 });
 
 OAuthClientSchema.static('authenticate', function(clientId, secret, cb) {
-  this.findOne({ clientId: clientId }, function(err, client) {
-    if (err || !client) return cb(err);
+
+  this.findOne({ clientId: clientId }).then(function(client) {
     cb(null, bcrypt.compareSync(secret, client.secret) ? client : null);
-  });
+  }, function(error) {
+    return error;
+  })
 });
 
 mongoose.model('clients', OAuthClientSchema);
