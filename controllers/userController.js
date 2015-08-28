@@ -29,7 +29,7 @@ var UserController = {
       }
 
       if (userExistsResult.length > 0) {
-        return responseUtil.handleBadRequest(res, 'A user already exists with that email address.')
+        return responseUtil.handleBadRequest(res, 'A user already exists with that email address.');
       }
 
       // Save the client and check for errors
@@ -50,7 +50,7 @@ var UserController = {
     }
 
     var authUser = res.locals.user;
-    return responseUtil.handleSuccess(res, authUser)
+    return responseUtil.handleSuccess(res, authUser);
   },
 
   getUser: function(req, res) {
@@ -70,12 +70,29 @@ var UserController = {
     });
   },
 
+  getUserByName: function(req, res) {
+
+    if (!req.username) {
+      return res.sendUnauthenticated();
+    }
+
+    var username = req.params.username;
+
+    // Use the User model to find all clients
+    OAuthUsersSchema.find({'userName':username}, function(err, user) {
+      if (err) {
+        return responseUtil.handleInternalError(res, err);
+      }
+      return responseUtil.handleSuccess(res, user);
+    });
+  },
+
   updateUser: function(req,res) {
 
     if (!req.username) {
       return res.sendUnauthenticated();
     }
-    
+
     var userId = req.params.userId;
     var authUser = res.locals.user;
     var authUserId = authUser.id;
@@ -107,10 +124,10 @@ var UserController = {
           if (err) {
             return responseUtil.handleInternalError(res, err);
           }
-          return responseUtil.handleSuccess(res, updatedUser)
+          return responseUtil.handleSuccess(res, updatedUser);
         });
       } else {
-        return responseUtil.handleNotFoundRequest(res, 'Unable to find specified user.')
+        return responseUtil.handleNotFoundRequest(res, 'Unable to find specified user.');
       }
     });
   }

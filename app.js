@@ -57,8 +57,7 @@ api.use(function(req, res, next) {
   next();
 });
 
-restifyOAuth2.ropc(api, { tokenEndpoint: '/token', hooks: hooks });
-
+restifyOAuth2.ropc(api, { tokenEndpoint: '/login', hooks: hooks });
 
 //Iterates through all ./routes files to find matching route
 logger.info('loading routes');
