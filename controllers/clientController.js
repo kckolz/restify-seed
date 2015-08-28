@@ -31,7 +31,7 @@ var ClientController = {
     }
 
     // Use the User model to find all clients
-    OAuthClientsSchema.find({'clientId':req.params.clientId}).exec().then(function(client) {
+    OAuthClientsSchema.findOne({'clientId':req.params.clientId}).exec().then(function(client) {
       return responseUtil.handleSuccess(res, client);
     }, function(error) {
       return responseUtil.handleInternalError(res, err);
