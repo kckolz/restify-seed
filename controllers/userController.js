@@ -24,8 +24,10 @@ var UserController = {
     user.password = req.body.password;
     user.password_reset_token = uuid.v1();
 
-    OAuthUsersSchema.find({email:req.body.email}).then(function(user) {
-      return responseUtil.handleBadRequest(res, 'A user already exists with that email address.');
+    OAuthUsersSchema.findOne({email:req.body.email}).then(function(user) {
+      if(user) {
+        return responseUtil.handleBadRequest(res, 'A user already exists with that email address.');
+      }
     }, function(error) {
       return responseUtil.handleInternalError(res, error);
     })

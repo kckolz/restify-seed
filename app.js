@@ -24,7 +24,7 @@ api.use(restify.authorizationParser());
 api.use(restify.bodyParser({ mapParams: false }));
 api.use(restify.queryParser());
 
-logger.info('enabling CORS');
+// Enable CORS
 api.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
@@ -60,7 +60,6 @@ api.use(function(req, res, next) {
 restifyOAuth2.ropc(api, { tokenEndpoint: '/login', hooks: hooks });
 
 //Iterates through all ./routes files to find matching route
-logger.info('loading routes');
 fs.readdirSync('./routes').forEach(function(curFile) {
   if (curFile.substr(-3) === '.js') {
     var route = require('./routes/' + curFile);
