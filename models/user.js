@@ -23,12 +23,17 @@ function hashPassword(password) {
 
 OAuthUsersSchema.static('register', function(fields, cb) {
   var user;
-
+  var dfd = Q.defer();
   fields.hashed_password = hashPassword(fields.password);
   delete fields.password;
 
   user = new OAuthUsersModel(fields);
-  return user.save();
+  user.save().then(function(user) {
+    dfd.resolve(user)
+  }, function(error) {
+    dfd.reject(error);
+  });
+  return dfd.promise;
 });
 
 OAuthUsersSchema.static('getUser', function(email) {
@@ -59,7 +64,7 @@ OAuthUsersSchema.static('updateUser', function(currentUser) {
   return dfd.promise;
 });
 
-OAuthUsersSchema.static('authenticate', function(email, password, cb) {
+OAuthUsersSchema.static('authenticate', function(email, password) {
   var dfd = Q.defer();
   this.findOne({ email: email }).then(function(user) {
     dfd.resolve(bcrypt.compareSync(password, user.hashed_password) ? user : null);
